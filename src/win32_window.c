@@ -354,6 +354,14 @@ static void updateWindowStyles(const _GLFWwindow* window)
     else
         AdjustWindowRectEx(&rect, style, FALSE, getWindowExStyle(window));
 
+    if(!window->decorated) 
+    {
+        rect.left += 8;
+        rect.right += 8;
+        rect.top += 30;
+        rect.bottom += 30;
+    }
+
     ClientToScreen(window->win32.handle, (POINT*) &rect.left);
     ClientToScreen(window->win32.handle, (POINT*) &rect.right);
     SetWindowLongW(window->win32.handle, GWL_STYLE, style);
@@ -559,10 +567,10 @@ static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
                 (window->win32.maximized &&
                  wParam != SIZE_RESTORED);
 
-            if(wParam == TRUE && lParam != NULL && maximized) {
+            if(wParam == TRUE && lParam && maximized) {
                 NCCALCSIZE_PARAMS* pParams = (NCCALCSIZE_PARAMS*)(lParam);
                 pParams->rgrc[0].top += 8;
-                pParams->rgrc[0].right -= 9;
+                pParams->rgrc[0].right -= 8;
                 pParams->rgrc[0].bottom -= 8;
                 pParams->rgrc[0].left += 8;
             }
@@ -1555,6 +1563,8 @@ GLFWbool _glfwCreateWindowWin32(_GLFWwindow* window,
         }
     }
 
+    updateWindowStyles(window);
+
     return GLFW_TRUE;
 }
 
@@ -1706,6 +1716,8 @@ void _glfwSetWindowSizeWin32(_GLFWwindow* window, int width, int height)
                      0, 0, rect.right - rect.left, rect.bottom - rect.top,
                      SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOMOVE | SWP_NOZORDER);
     }
+
+    updateWindowStyles(window);
 }
 
 void _glfwSetWindowSizeLimitsWin32(_GLFWwindow* window,
@@ -1789,11 +1801,13 @@ void _glfwGetWindowContentScaleWin32(_GLFWwindow* window, float* xscale, float* 
 void _glfwIconifyWindowWin32(_GLFWwindow* window)
 {
     ShowWindow(window->win32.handle, SW_MINIMIZE);
+    updateWindowStyles(window);
 }
 
 void _glfwRestoreWindowWin32(_GLFWwindow* window)
 {
     ShowWindow(window->win32.handle, SW_RESTORE);
+    updateWindowStyles(window);
 }
 
 void _glfwMaximizeWindowWin32(_GLFWwindow* window)
@@ -1802,6 +1816,8 @@ void _glfwMaximizeWindowWin32(_GLFWwindow* window)
         ShowWindow(window->win32.handle, SW_MAXIMIZE);
     else
         maximizeWindowManually(window);
+
+    updateWindowStyles(window);
 }
 
 void _glfwShowWindowWin32(_GLFWwindow* window)
