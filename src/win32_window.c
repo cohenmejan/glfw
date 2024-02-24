@@ -57,7 +57,7 @@ static DWORD getWindowStyle(const _GLFWwindow* window)
                 style |= WS_MAXIMIZEBOX | WS_THICKFRAME;
         }
         else
-            style |= WS_POPUP | WS_CAPTION | WS_THICKFRAME | WS_MINIMIZEBOX;
+            style |= WS_POPUP | WS_CAPTION | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
     }
 
     return style;
@@ -555,6 +555,18 @@ static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
     {
         case WM_NCCALCSIZE:
         {
+            const GLFWbool maximized = wParam == SIZE_MAXIMIZED ||
+                (window->win32.maximized &&
+                 wParam != SIZE_RESTORED);
+
+            if(wParam == TRUE && lParam != NULL && maximized) {
+                NCCALCSIZE_PARAMS* pParams = (NCCALCSIZE_PARAMS*)(lParam);
+                pParams->rgrc[0].top += 8;
+                pParams->rgrc[0].right -= 9;
+                pParams->rgrc[0].bottom -= 8;
+                pParams->rgrc[0].left += 8;
+            }
+
             if(!window->decorated)
                 return 0;
 
