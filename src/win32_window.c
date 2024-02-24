@@ -57,7 +57,7 @@ static DWORD getWindowStyle(const _GLFWwindow* window)
                 style |= WS_MAXIMIZEBOX | WS_THICKFRAME;
         }
         else
-            style |= WS_POPUP;
+            style |= WS_POPUP | WS_CAPTION | WS_THICKFRAME | WS_MINIMIZEBOX;
     }
 
     return style;
@@ -553,6 +553,51 @@ static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 
     switch (uMsg)
     {
+        case WM_NCCALCSIZE:
+        {
+            if(!window->decorated)
+                return 0;
+
+            break;
+        }
+        case WM_NCHITTEST:
+        {
+            // Expand the hit test area for resizing
+            const int borderWidth = 12; // Adjust this value to control the hit test area size
+
+            POINTS mousePos = MAKEPOINTS(lParam);
+            POINT clientMousePos = {mousePos.x, mousePos.y};
+            ScreenToClient(hWnd, &clientMousePos);
+
+            RECT windowRect;
+            GetClientRect(hWnd, &windowRect);
+
+            if(clientMousePos.y >= windowRect.bottom - borderWidth) {
+                if(clientMousePos.x <= borderWidth)
+                    return HTBOTTOMLEFT;
+                else if(clientMousePos.x >= windowRect.right - borderWidth)
+                    return HTBOTTOMRIGHT;
+                else
+                    return HTBOTTOM;
+            }
+            /*else if(clientMousePos.y <= borderWidth) {
+                if(clientMousePos.x <= borderWidth)
+                    return HTTOPLEFT;
+                else if(clientMousePos.x >= windowRect.right - borderWidth)
+                    return HTTOPRIGHT;
+                else
+                    return HTTOP;
+            }
+            else if(clientMousePos.x <= borderWidth) {
+                return HTLEFT;
+            }
+            else if(clientMousePos.x >= windowRect.right - borderWidth) {
+                return HTRIGHT;
+            }*/
+
+            break;
+        }
+
         case WM_MOUSEACTIVATE:
         {
             // HACK: Postpone cursor disabling when the window was activated by
