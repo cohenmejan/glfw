@@ -3,8 +3,8 @@ project "GLFW"
 	language "C"
 	staticruntime "on"
 
-	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
-	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
+	targetdir ("bin/%{cfg.buildcfg}/%{prj.name}")
+	objdir ("bin-int/%{cfg.buildcfg}/%{prj.name}")
 
 	files
 	{
