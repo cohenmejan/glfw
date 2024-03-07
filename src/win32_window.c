@@ -57,7 +57,7 @@ static DWORD getWindowStyle(const _GLFWwindow* window)
                 style |= WS_MAXIMIZEBOX | WS_THICKFRAME;
         }
         else
-            style |= WS_POPUP | WS_CAPTION | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+            style |= WS_POPUP | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
     }
 
     return style;
@@ -356,10 +356,10 @@ static void updateWindowStyles(const _GLFWwindow* window)
 
     if(!window->decorated) 
     {
-        rect.left += 8;
-        rect.right += 8;
-        rect.top += 30;
-        rect.bottom += 30;
+        rect.left -= 2;
+        rect.right += 2;
+        rect.top -= 2;
+        rect.bottom += 2;
     }
 
     ClientToScreen(window->win32.handle, (POINT*) &rect.left);
@@ -592,7 +592,7 @@ static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
             RECT windowRect;
             GetClientRect(hWnd, &windowRect);
 
-            if(clientMousePos.y >= windowRect.bottom - borderWidth) {
+            if(clientMousePos.y >= windowRect.bottom - borderWidth && window->resizable) {
                 if(clientMousePos.x <= borderWidth)
                     return HTBOTTOMLEFT;
                 else if(clientMousePos.x >= windowRect.right - borderWidth)
