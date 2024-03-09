@@ -2019,6 +2019,23 @@ void _glfwSetWindowFloatingWin32(_GLFWwindow* window, GLFWbool enabled)
     const HWND after = enabled ? HWND_TOPMOST : HWND_NOTOPMOST;
     SetWindowPos(window->win32.handle, after, 0, 0, 0, 0,
                  SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+
+    RECT rect;
+    DWORD style = GetWindowLongW(window->win32.handle, GWL_STYLE);
+    style &= ~(WS_OVERLAPPEDWINDOW | WS_POPUP);
+    style |= getWindowStyle(window);
+
+    GetClientRect(window->win32.handle, &rect);
+
+    if(_glfwIsWindows10Version1607OrGreaterWin32()) {
+        AdjustWindowRectExForDpi(&rect, style, FALSE,
+                                 getWindowExStyle(window),
+                                 GetDpiForWindow(window->win32.handle));
+    }
+    else
+        AdjustWindowRectEx(&rect, style, FALSE, getWindowExStyle(window));
+
+    SetWindowLongW(window->win32.handle, GWL_STYLE, style);
 }
 
 void _glfwSetWindowMousePassthroughWin32(_GLFWwindow* window, GLFWbool enabled)
