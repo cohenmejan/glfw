@@ -582,12 +582,6 @@ GLFWAPI void glfwSetWindowPos(GLFWwindow* handle, int xpos, int ypos)
     if (window->monitor)
         return;
 
-    if(!window->decorated) 
-    {
-        xpos += 8;
-        ypos += 31;
-    }
-
     _glfw.platform.setWindowPos(window, xpos, ypos);
 }
 
