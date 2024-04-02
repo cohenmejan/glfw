@@ -57,7 +57,7 @@ static DWORD getWindowStyle(const _GLFWwindow* window)
                 style |= WS_MAXIMIZEBOX | WS_THICKFRAME;
         }
         else
-            style |= WS_POPUP | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+            style |= WS_POPUP | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
     }
 
     return style;
@@ -354,14 +354,6 @@ static void updateWindowStyles(const _GLFWwindow* window)
     else
         AdjustWindowRectEx(&rect, style, FALSE, getWindowExStyle(window));
 
-    if(!window->decorated) 
-    {
-        rect.left -= 2;
-        rect.right += 2;
-        rect.top -= 2;
-        rect.bottom += 2;
-    }
-
     ClientToScreen(window->win32.handle, (POINT*) &rect.left);
     ClientToScreen(window->win32.handle, (POINT*) &rect.right);
     SetWindowLongW(window->win32.handle, GWL_STYLE, style);
@@ -561,63 +553,6 @@ static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 
     switch (uMsg)
     {
-        case WM_NCCALCSIZE:
-        {
-            const GLFWbool maximized = wParam == SIZE_MAXIMIZED ||
-                (window->win32.maximized &&
-                 wParam != SIZE_RESTORED);
-
-            if(wParam == TRUE && lParam && maximized) {
-                NCCALCSIZE_PARAMS* pParams = (NCCALCSIZE_PARAMS*)(lParam);
-                pParams->rgrc[0].top += 8;
-                pParams->rgrc[0].right -= 8;
-                pParams->rgrc[0].bottom -= 8;
-                pParams->rgrc[0].left += 8;
-            }
-
-            if(!window->decorated)
-                return 0;
-
-            break;
-        }
-        case WM_NCHITTEST:
-        {
-            // Expand the hit test area for resizing
-            const int borderWidth = 12; // Adjust this value to control the hit test area size
-
-            POINTS mousePos = MAKEPOINTS(lParam);
-            POINT clientMousePos = {mousePos.x, mousePos.y};
-            ScreenToClient(hWnd, &clientMousePos);
-
-            RECT windowRect;
-            GetClientRect(hWnd, &windowRect);
-
-            if(clientMousePos.y >= windowRect.bottom - borderWidth && window->resizable) {
-                if(clientMousePos.x <= borderWidth)
-                    return HTBOTTOMLEFT;
-                else if(clientMousePos.x >= windowRect.right - borderWidth)
-                    return HTBOTTOMRIGHT;
-                else
-                    return HTBOTTOM;
-            }
-            /*else if(clientMousePos.y <= borderWidth) {
-                if(clientMousePos.x <= borderWidth)
-                    return HTTOPLEFT;
-                else if(clientMousePos.x >= windowRect.right - borderWidth)
-                    return HTTOPRIGHT;
-                else
-                    return HTTOP;
-            }
-            else if(clientMousePos.x <= borderWidth) {
-                return HTLEFT;
-            }
-            else if(clientMousePos.x >= windowRect.right - borderWidth) {
-                return HTRIGHT;
-            }*/
-
-            break;
-        }
-
         case WM_MOUSEACTIVATE:
         {
             // HACK: Postpone cursor disabling when the window was activated by
@@ -1102,6 +1037,11 @@ static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 
             window->win32.iconified = iconified;
             window->win32.maximized = maximized;
+
+            if(!maximized) {
+                updateWindowStyles(window);
+            }
+
             return 0;
         }
 
@@ -1688,6 +1628,8 @@ void _glfwGetWindowSizeWin32(_GLFWwindow* window, int* width, int* height)
 
 void _glfwSetWindowSizeWin32(_GLFWwindow* window, int width, int height)
 {
+    width -= 12;
+    height -= 12;
     if (window->monitor)
     {
         if (window->monitor->window == window)
