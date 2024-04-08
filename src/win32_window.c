@@ -1628,8 +1628,6 @@ void _glfwGetWindowSizeWin32(_GLFWwindow* window, int* width, int* height)
 
 void _glfwSetWindowSizeWin32(_GLFWwindow* window, int width, int height)
 {
-    width -= 12;
-    height -= 12;
     if (window->monitor)
     {
         if (window->monitor->window == window)
